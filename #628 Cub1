@@ -1,0 +1,136 @@
+#include <fstream>
+#include <bitset>
+#include <queue>
+#include <climits>
+#include <stack>
+std::ifstream fin("cub1.in");
+std::ofstream fout("cub1.out");
+
+int n;
+
+const int di[] = { 1, -1, 0, 0, 0, 0 };
+
+const int dj[] = { 0, 0, 1, 0, -1, 0 };
+
+const int dd[] = { 0, 0, 0, 1, 0, -1 };
+
+std::bitset<6> mat[101][101][101];
+
+int drum[101][101][101];
+
+std::pair<int,std::pair<int,int>> directii[101][101][101];
+
+bool cond(int i, int j, int d )
+{
+    return i <= n && i >= 1 && j <= n && j >= 1 && d <= n && d >= 1;
+}
+
+void lee( int x, int y, int z)
+{
+    std::queue<std::pair<int,std::pair<int,int>>>q;
+    
+    q.push( { x, {y, z } } );
+    
+    drum[x][y][z] = 1;
+    
+    while(!q.empty())
+    {
+        int i = q.front().first, j = q.front().second.first, d = q.front().second.second;
+        
+        q.pop();
+        
+        for( int v = 0; v < 6; v ++)
+        {
+            int ni = i + di[v];
+            int nj = j + dj[v];
+            int nd = d + dd[v];
+            //fout << ni << ' ' << nj << ' ' << nd << '\n';
+            if(cond(ni,nj,nd) && drum[ni][nj][nd] > drum[i][j][d] + 1 && mat[i][j][d][v] == 1)
+            {
+                drum[ni][nj][nd] = drum[i][j][d] + 1;
+                directii[ni][nj][nd] =  { i, {j, d} };
+                q.push( { ni, {nj, nd} } );
+            }
+        }
+    }
+}
+void reconstruiresiafisare()
+{
+    if(drum[n][n][n] == INT_MAX)
+    {
+        fout << -1;
+        return;
+    }
+    fout << drum[n][n][n] << "\n";
+    std::stack<std::pair<int,std::pair<int,int>>>st;
+    int i = n;
+    int j = n;
+    int d = n;
+    while (i != 1 || j != 1 || d != 1)
+    {
+        st.push({ i,{ j, d }});
+        int ni = directii[i][j][d].first;
+        int nj = directii[i][j][d].second.first;
+        int nd = directii[i][j][d].second.second;
+        i = ni;
+        j = nj;
+        d = nd; 
+    }
+    st.push({1,{ 1, 1 }});
+    while (!st.empty())
+    {
+        fout << st.top().first << ' '<< st.top().second.first << ' ' << st.top().second.second << '\n';
+        st.pop();
+    }
+}
+void afisare()
+{
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= n; j++,fout<<'\n')
+            for (int d = 1; d <= n; d++)
+                fout << drum[i][j][d] << ' ';
+}
+
+int main()
+{
+    int cer;
+    fin >> cer;
+    fin >> n;
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= n; j++)
+            for (int d = 1; d <= n; d++)
+            {
+                int x;
+                fin >> x;
+                mat[i][j][d] = x;
+                drum[i][j][d] = INT_MAX;
+            }
+
+    //afisare();
+    if(cer == 1) {
+        int maxi= -1, x = 1, y = 1, z = 1 ;
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= n; j++)
+                for (int d = 1; d <= n; d++)
+                {
+                    int nr=0;
+                    for (int k = 0; k < 6; k++)
+                    {
+                        (mat[i][j][d][k] == 1 && cond(i + di[k], j + dj[k], d + dd[k])) ? nr++ : nr;
+                    }
+                    if(maxi < nr)
+                    {
+                        x = i,y = j,z = d;
+                        maxi = nr;
+                    }
+                }
+        fout << x << ' '<< y << ' ' << z ;
+    }
+    else
+    {
+        lee(1, 1, 1);
+        //afisare();
+        reconstruiresiafisare();
+    }
+    return 0;
+}
